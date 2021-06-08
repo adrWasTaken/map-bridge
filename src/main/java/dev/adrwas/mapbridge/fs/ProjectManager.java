@@ -22,47 +22,54 @@ import dev.adrwas.mapbridge.projects.Project;
 
 public class ProjectManager {
 	
-	public static List<Project> projects;
+	public List<Project> projects;
 	
-	public static List<Project> getProjects() throws IOException {
-		List<Project> projects = new ArrayList<Project>();
+	public ProjectManager() {
+		projects = new ArrayList<Project>();
 		
-		File data = new File(MapBridge.getInstance().getDataFolder().getPath() + File.separator + ".projects");
+		this.refresh();
+	}
+	
+	public void refresh() {
+		File data = new File(
+			MapBridge.getInstance().getDataFolder().getPath() + File.separator + ".projects"
+		);
+		
 		if(data.exists()) {
-			System.out.println("Found .projects file, reading!");
-			
 			JsonParser parser = new JsonParser();
+			
 			try(FileReader reader = new FileReader(data)) {
-				Object obj = parser.parse(reader);
-				JsonObject jsonObject = (JsonObject) obj;
+				Object object = parser.parse(reader);
+				JsonObject jsonObject = (JsonObject) object;
 				
 				for(Entry<String, JsonElement> entry : jsonObject.getAsJsonObject("projects").entrySet())
 					projects.add(new Project(entry.getKey(), entry.getValue().getAsJsonObject().get("id").getAsString()));
+			} catch(IOException exception) {
+				exception.printStackTrace();
+				Bukkit.getPluginManager().disablePlugin(MapBridge.getInstance());
 			}
 		} else {
-			System.out.println("No .projects file found, creating one!");
-			
-			data.createNewFile();
-			PrintStream out = new PrintStream(new FileOutputStream(data));
-			out.println("{}");
-			out.close();
+			try {
+				data.createNewFile();
+				
+				PrintStream out = new PrintStream(new FileOutputStream(data));
+				out.println("{}");
+				out.close();
+			} catch(IOException exception) {
+				exception.printStackTrace();
+				Bukkit.getPluginManager().disablePlugin(MapBridge.getInstance());
+			}
 		}
-		
-		File projectsDir = new File(MapBridge.getInstance().getDataFolder().getPath() + File.separator + "directories");
-		if(!projectsDir.exists())
-			projectsDir.mkdir();
-		
-		return projects;
 	}
-	
-	public static Project findProjectFromPath(String path) {
+
+	public Project findProjectFromPath(String path) {
 		for(Project project : projects)
 			if(project.getPath().equals(path))
 				return project;
 		return null;
 	}
 	
-	public static Project findProjectFromID(String id) {
+	public Project findProjectFromID(String id) {
 		for(Project project : projects)
 			if(project.getId().equals(id))
 				return project;

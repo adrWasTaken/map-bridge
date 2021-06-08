@@ -23,51 +23,43 @@ public class MapBridge extends JavaPlugin {
 	
 	private static MapBridge instance;
 	
+	public static ProjectManager projectManager;
+	
 	@Override
 	public void onEnable() {
-		
 		instance = this;
 		
-		try {
-			ProjectManager.projects = ProjectManager.getProjects();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-			
-			this.setEnabled(false);
-		}
-		
-		Bukkit.broadcastMessage("§2MapBridge enabled");
-		
+		projectManager = new ProjectManager();
 	}
 	
 	@Override //FIXME temp
 	public boolean onCommand(CommandSender sender, Command command, String label, String args[]) {
-		if(command.getName().equalsIgnoreCase("dir")) {
-			String search = args[0];
-			sender.sendMessage("§eSearching for §7" + search + "§e...");
-			
-			File dir = new File(getDataFolder().getPath() + File.separator + "directories" + File.separator + search);
-			if(dir.exists() && dir.isDirectory()) {
-				if(ProjectManager.findProjectFromPath(search) != null) {
-					sender.sendMessage("§cThis is a project!");
-				} else {
-					sender.sendMessage("§aFound this folder!\n§6Subfolders:");
-					for(File file : dir.listFiles()) {
-						if(!file.isDirectory()) continue;
-						sender.sendMessage("§f- §d" + file.getName());
-					}
-				}
-			} else {
-				sender.sendMessage("§cThis folder doesnt exist");
-			}
-		} else if(command.getName().equalsIgnoreCase("createproject")) {
+//		if(command.getName().equalsIgnoreCase("dir")) {
+//			String search = args[0];
+//			sender.sendMessage("§eSearching for §7" + search + "§e...");
+//			
+//			File dir = new File(getDataFolder().getPath() + File.separator + "directories" + File.separator + search);
+//			if(dir.exists() && dir.isDirectory()) {
+//				if(ProjectManager.findProjectFromPath(search) != null) {
+//					sender.sendMessage("§cThis is a project!");
+//				} else {
+//					sender.sendMessage("§aFound this folder!\n§6Subfolders:");
+//					for(File file : dir.listFiles()) {
+//						if(!file.isDirectory()) continue;
+//						sender.sendMessage("§f- §d" + file.getName());
+//					}
+//				}
+//			} else {
+//				sender.sendMessage("§cThis folder doesnt exist");
+//			}
+//		} else 
+		if(command.getName().equalsIgnoreCase("createproject")) {
 			if(args.length < 1) {
 				sender.sendMessage("§cSyntax: /createproject <path>");
 				return false;
 			}
 			
-			File dir = new File(this.getDataFolder() + File.separator + "directories" + args[0]);
+			File dir = new File(this.getDataFolder() + File.separator + "directories" + File.separator + args[0]);
 			
 			if(dir.exists()) {
 				sender.sendMessage("§cThis already exists");
