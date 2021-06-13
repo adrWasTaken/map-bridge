@@ -6,4 +6,8 @@ commands:
   dir:
     description: view a directory
   createproject:
+    description: create a project
+  projects:
+    description: list projects
+  openproject:
     description: open a project

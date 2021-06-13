@@ -3,6 +3,7 @@ package dev.adrwas.mapbridge.fs;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.WorldCreator;
 
 import com.google.gson.JsonElement;
@@ -29,8 +31,30 @@ public class ProjectManager {
 		
 		this.refresh();
 	}
+
+	public void addProject(Project newProject) throws IOException {
+		projects.add(newProject);
+		
+		JsonObject jsonObject = new JsonObject();
+		jsonObject.add("projects", new JsonObject());
+		
+		for(Project project : projects)
+		{
+			JsonObject subObject = new JsonObject();
+			subObject.addProperty("id", project.getId());
+			
+			jsonObject.get("projects").getAsJsonObject().add(project.getPath(), subObject);
+		}
+				
+		File data = getProjectsDataFile();
+		FileWriter writer = new FileWriter(data, false);
+		
+		writer.write(jsonObject.toString());
+		
+		writer.close();
+	}
 	
-	public void refresh() {
+ 	public void refresh() {
 		File data = new File(
 			MapBridge.getInstance().getDataFolder().getPath() + File.separator + ".projects"
 		);
@@ -76,12 +100,24 @@ public class ProjectManager {
 		return null;
 	}
 	
-	public static void loadProjectWorld(Project project) { // test
+	public static File getProjectsDataFile() {
+		File file = new File(MapBridge.getInstance().getDataFolder().getPath() + File.separator + ".projects");
+		if(!file.exists())
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		return file;
+	}
+	
+ 	public static World loadProjectWorld(Project project) throws IOException { // test
 		System.out.println("Loading project world " + project.getPath() + "... (ID: " + project.getId() + ")");
 		String worldName = "bridge-" + project.getId(); // TODO configure prefix
 		
 		if(Bukkit.getWorld(worldName) != null) {
 			System.out.println("World is already loaded");
+			return Bukkit.getWorld(worldName);
 		}
 		
 		else {
@@ -91,24 +127,15 @@ public class ProjectManager {
 			
 			if(dir.exists()) {
 				System.out.println("World directory exists");
-				try {
-					FileUtils.deleteDirectory(dir);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				FileUtils.deleteDirectory(dir);
 			}
 			
 			System.out.println("Copying from " + MapBridge.getInstance().getDataFolder().getPath() + File.separator + "directories" + File.separator + project.getPath());
-			try {
-				FileUtils.copyDirectory(new File(MapBridge.getInstance().getDataFolder().getPath() + File.separator + "directories" + File.separator + project.getPath()), dir);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			FileUtils.copyDirectory(new File(MapBridge.getInstance().getDataFolder().getPath() + File.separator + "directories" + File.separator + project.getPath()), dir);
 			
 			WorldCreator creator = new WorldCreator(worldName);
 			
-			creator.createWorld();
+			return creator.createWorld();
 		}
 	}
 }
